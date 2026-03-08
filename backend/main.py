@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import uuid
 import os
-
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from rag.parser import extract_text_from_pdf, chunk_text
 from rag.vectorstore import store_chunks, delete_session
 from rag.chain import get_answer, clear_memory
@@ -109,3 +110,14 @@ async def end_session(session_id: str):
     delete_session(session_id)
     clear_memory(session_id)
     return {"message": "Session ended and data cleared."}
+
+
+if os.path.isdir("static"):
+    # Catch-all route: any unknown path returns index.html (needed for React Router)
+    @app.get("/{full_path:path}")
+    async def serve_react(full_path: str):
+        index = os.path.join("static", "index.html")
+        return FileResponse(index)
+
+    # Mount static assets (JS, CSS, images)
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
