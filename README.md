@@ -1,10 +1,10 @@
-# 📄 PDF RAG Chatbot — Free Stack
+PDF RAG Chatbot — Free Stack
 **Upload any PDF → Ask questions → Get AI answers**
 Powered by Groq (free LLM) + sentence-transformers (free embeddings) + ChromaDB (free vector DB)
 
 ---
 
-## ✅ What You Need Before Starting
+## What You Need Before Starting
 - [VS Code](https://code.visualstudio.com/) installed
 - [Python 3.10+](https://www.python.org/downloads/) installed
 - [Node.js 18+](https://nodejs.org/) installed
@@ -14,7 +14,7 @@ Powered by Groq (free LLM) + sentence-transformers (free embeddings) + ChromaDB 
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 ```
 pdf-rag/
 ├── backend/
@@ -44,7 +44,7 @@ pdf-rag/
 
 ---
 
-## 🚀 Step 1 — Get Your Free Groq API Key
+##  Step 1 — Get Your Free Groq API Key
 
 1. Go to **https://console.groq.com**
 2. Sign up (free, no credit card)
@@ -58,7 +58,7 @@ pdf-rag/
 
 ---
 
-## 🐍 Step 2 — Set Up the Backend
+##  Step 2 — Set Up the Backend
 
 Open a terminal in VS Code (`Ctrl + `` ` ``):
 
@@ -79,11 +79,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-⚠️ **First install takes 2–5 minutes** — sentence-transformers downloads a small AI model (~80MB).
+ **First install takes 2–5 minutes** — sentence-transformers downloads a small AI model (~80MB).
 
 ---
 
-## ▶️ Step 3 — Run the Backend
+##  Step 3 — Run the Backend
 
 ```bash
 # Make sure you're in the backend/ folder with venv active
@@ -95,12 +95,11 @@ You should see:
 INFO:     Uvicorn running on http://127.0.0.1:8000
 INFO:     Application startup complete.
 ```
-
-✅ Test it: Open http://localhost:8000/health in your browser — you should see `{"status":"ok"}`.
+Test it: Open http://localhost:8000/health in your browser — you should see `{"status":"ok"}`.
 
 ---
 
-## ⚛️ Step 4 — Set Up the Frontend
+## Step 4 — Set Up the Frontend
 
 Open a **second terminal** in VS Code:
 
@@ -121,11 +120,11 @@ You should see:
   ➜  Local:   http://localhost:5173/
 ```
 
-✅ Open **http://localhost:5173** in your browser — you'll see the PDF upload screen!
+Open **http://localhost:5173** in your browser — you'll see the PDF upload screen!
 
 ---
 
-## 🧪 Step 5 — Test It Locally
+## Step 5 — Test It Locally
 
 1. Open http://localhost:5173
 2. Drag & drop any PDF (try a research paper or any text PDF)
@@ -134,7 +133,7 @@ You should see:
 
 ---
 
-## 🌐 Step 6 — Deploy to the Internet (Free)
+## Step 6 — Deploy to the Internet (Free)
 
 ### 6A — Push to GitHub
 
@@ -166,7 +165,7 @@ git push -u origin main
 Wait ~3 minutes for it to deploy. You'll get a URL like:
 `https://pdf-rag-xxxx.onrender.com`
 
-✅ Test: Visit `https://pdf-rag-xxxx.onrender.com/health`
+Test: Visit `https://pdf-rag-xxxx.onrender.com/health`
 
 ### 6C — Deploy Frontend to Vercel (Free)
 
@@ -188,7 +187,7 @@ You'll get a live URL like: `https://pdf-rag.vercel.app` 🎉
 
 ---
 
-## 💡 Common Issues & Fixes
+## Common Issues & Fixes
 
 | Problem | Fix |
 |---|---|
@@ -201,7 +200,7 @@ You'll get a live URL like: `https://pdf-rag.vercel.app` 🎉
 
 ---
 
-## 🔑 Free Tier Limits
+## Free Tier Limits
 
 | Service | Free Limit |
 |---|---|
@@ -211,11 +210,11 @@ You'll get a live URL like: `https://pdf-rag.vercel.app` 🎉
 | **sentence-transformers** | Unlimited (runs locally) |
 | **ChromaDB** | Unlimited (stores locally) |
 
-**Total monthly cost: $0** ✅
+**Total monthly cost: $0** 
 
 ---
 
-## 🛠️ VS Code Extensions (Recommended)
+## VS Code Extensions (Recommended)
 
 Install these for the best dev experience:
 - **Python** (Microsoft)
@@ -225,7 +224,7 @@ Install these for the best dev experience:
 
 ---
 
-## 📬 Need Help?
+## Need Help?
 
 If something isn't working:
 1. Check the terminal running the backend for error messages
