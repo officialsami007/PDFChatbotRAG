@@ -1,0 +1,24 @@
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  timeout: 60000, // 60s — embedding can take a moment on first load
+})
+
+export const uploadPDF = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await api.post('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data // { session_id, chunks_stored, message }
+}
+
+export const askQuestion = async (session_id, question) => {
+  const { data } = await api.post('/ask', { session_id, question })
+  return data // { answer, chunks_used }
+}
+
+export const endSession = async (session_id) => {
+  await api.delete(`/session/${session_id}`)
+}
