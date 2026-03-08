@@ -1,78 +1,70 @@
-from openai import OpenAI
-from typing import List
 import os
+from typing import Dict
+from langchain_groq import ChatGroq
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from rag.vectorstore import get_vectorstore
 
-# Groq uses the same OpenAI SDK — just different base_url and model
-_client = None
+# In-memory store: { session_id: ConversationalRetrievalChain }
+_chains: Dict[str, ConversationalRetrievalChain] = {}
 
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions strictly based on the provided PDF document context.
-
 Rules:
-- Only answer using information from the provided context
+- Only answer using information from the provided context.
 - If the answer is not in the context, say: "I couldn't find that information in the document."
-- Be clear, concise, and helpful
-- If the user asks a follow-up, use the conversation history to understand what they mean
+- Be clear, concise, and helpful.
+- Use conversation history to understand follow-up questions.
 """
 
-# In-memory conversation store: { session_id: [messages] }
-conversation_store: dict = {}
 
-
-def get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        _client = OpenAI(
-            api_key=os.getenv("GROQ_API_KEY"),
-            base_url="https://api.groq.com/openai/v1"
-        )
-    return _client
-
-
-def get_answer(session_id: str, question: str, context_chunks: List[str]) -> str:
-    """
-    Generate an answer using retrieved document context and conversation history.
-    """
-    client = get_client()
-
-    # Init conversation history for new sessions
-    if session_id not in conversation_store:
-        conversation_store[session_id] = []
-
-    history = conversation_store[session_id]
-
-    # Join retrieved chunks as context
-    context = "\n\n---\n\n".join(context_chunks)
-
-    # The user message includes the retrieved context for grounding
-    user_message = f"""Here is the relevant context from the document:
-
-{context}
-
----
-
-Question: {question}"""
-
-    # Build messages: system + last 6 history messages + new user message
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    messages.extend(history[-6:])  # last 3 Q&A turns
-    messages.append({"role": "user", "content": user_message})
-
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",  # free on Groq
-        messages=messages,
-        temperature=0.2,   # low = more factual, less hallucination
-        max_tokens=1024
+def _build_chain(session_id: str) -> ConversationalRetrievalChain:
+    llm = ChatGroq(
+        api_key=os.getenv("GROQ_API_KEY"),
+        model="llama-3.3-70b-versatile",
+        temperature=0.2,
+        max_tokens=1024,
     )
 
-    answer = response.choices[0].message.content
+    vectorstore = get_vectorstore(session_id)
+    retriever = vectorstore.as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": 5},
+    )
 
-    # Store the clean question and answer in memory (not the context-padded version)
-    history.append({"role": "user", "content": question})
-    history.append({"role": "assistant", "content": answer})
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True,
+        output_key="answer",
+    )
 
-    return answer
+    chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=retriever,
+        memory=memory,
+        return_source_documents=True,
+        verbose=False,
+    )
+
+    return chain
+
+
+def get_answer(session_id: str, question: str) -> tuple[str, int]:
+    """
+    Get an answer for a question using the session's vectorstore and conversation memory.
+    Returns (answer, chunks_used).
+    """
+    if session_id not in _chains:
+        _chains[session_id] = _build_chain(session_id)
+
+    chain = _chains[session_id]
+    result = chain.invoke({"question": question})
+
+    answer = result["answer"]
+    chunks_used = len(result.get("source_documents", []))
+
+    return answer, chunks_used
 
 
 def clear_memory(session_id: str) -> None:
-    if session_id in conversation_store:
-        del conversation_store[session_id]
+    if session_id in _chains:
+        del _chains[session_id]

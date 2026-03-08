@@ -6,18 +6,16 @@ import uuid
 import os
 
 from rag.parser import extract_text_from_pdf, chunk_text
-from rag.embedder import embed_texts, embed_query
-from rag.vectorstore import store_chunks, retrieve_chunks, delete_session
+from rag.vectorstore import store_chunks, delete_session
 from rag.chain import get_answer, clear_memory
 
 load_dotenv()
 
-app = FastAPI(title="PDF RAG Chatbot", version="1.0.0")
+app = FastAPI(title="PDF RAG Chatbot", version="2.0.0")
 
-# Allow requests from the React frontend (localhost:5173 for dev, and your Vercel domain for prod)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict this to your Vercel URL in production
+    allow_origins=["*"],  # Restrict to your Vercel URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,15 +42,14 @@ class UploadResponse(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    """Simple health check endpoint."""
     return {"status": "ok", "message": "PDF RAG Chatbot is running"}
 
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload_pdf(file: UploadFile = File(...)):
     """
-    Upload a PDF file. Extracts text, chunks it, embeds it, and stores in ChromaDB.
-    Returns a session_id to use for all questions about this PDF.
+    Upload a PDF. Extracts text, chunks it, embeds it via LangChain, and stores in ChromaDB.
+    Returns a session_id for all subsequent questions.
     """
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
@@ -68,23 +65,17 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
 
     if not text.strip():
-        raise HTTPException(status_code=400, detail="Could not extract any text from this PDF. It may be image-based (scanned).")
+        raise HTTPException(status_code=400, detail="Could not extract any text. PDF may be image-based.")
 
     # Step 2: Chunk text
     chunks = chunk_text(text, chunk_size=800, overlap=100)
     if not chunks:
         raise HTTPException(status_code=400, detail="PDF has no readable content.")
 
-    # Step 3: Embed chunks (free, local model)
-    try:
-        embeddings = embed_texts(chunks)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Embedding failed: {str(e)}")
-
-    # Step 4: Store in ChromaDB with a unique session ID
+    # Step 3: Embed + store via LangChain (embedder is called inside store_chunks)
     session_id = str(uuid.uuid4())
     try:
-        store_chunks(session_id, chunks, embeddings)
+        store_chunks(session_id, chunks)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Vector store failed: {str(e)}")
 
@@ -99,33 +90,17 @@ async def upload_pdf(file: UploadFile = File(...)):
 async def ask_question(req: QuestionRequest):
     """
     Ask a question about the uploaded PDF.
-    Requires the session_id returned from /upload.
+    LangChain handles retrieval + memory + generation internally.
     """
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    # Step 1: Embed the question
     try:
-        query_embedding = embed_query(req.question)
+        answer, chunks_used = get_answer(req.session_id, req.question)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Query embedding failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chain error: {str(e)}")
 
-    # Step 2: Retrieve top-5 relevant chunks
-    try:
-        context_chunks = retrieve_chunks(req.session_id, query_embedding, top_k=5)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}")
-
-    if not context_chunks:
-        raise HTTPException(status_code=404, detail="Session not found. Please upload a PDF first.")
-
-    # Step 3: Generate answer with Groq (free LLM)
-    try:
-        answer = get_answer(req.session_id, req.question, context_chunks)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM error: {str(e)}")
-
-    return QuestionResponse(answer=answer, chunks_used=len(context_chunks))
+    return QuestionResponse(answer=answer, chunks_used=chunks_used)
 
 
 @app.delete("/session/{session_id}")
