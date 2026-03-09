@@ -10,7 +10,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Render](https://img.shields.io/badge/Deployed-Render-46E3B7?style=for-the-badge)
 
-**Upload any PDF and have a real conversation with it. Powered by Retrieval-Augmented Generation (RAG) with a fully free tech stack — no paid APIs, no cloud vector databases.**
+**Upload any PDF and have a real conversation with it. Powered by Retrieval-Augmented Generation (RAG).**
 
 [🚀 Live Demo](https://pdf-chatbot-rag-t94b.onrender.com) · [📖 How It Works](#how-it-works) · [⚙️ Local Setup](#local-setup) · [🏗️ Architecture](#architecture)
 
