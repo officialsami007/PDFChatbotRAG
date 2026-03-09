@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  timeout: 60000, // 60s — embedding can take a moment on first load
+  baseURL: import.meta.env.VITE_API_URL || '',
+  timeout: 60000,
 })
 
 export const uploadPDF = async (file) => {
