@@ -23,8 +23,6 @@ app.add_middleware(
 )
 
 
-# ── Request/Response Models ──────────────────────────────────────────────────
-
 class QuestionRequest(BaseModel):
     session_id: str
     question: str
@@ -39,7 +37,6 @@ class UploadResponse(BaseModel):
     message: str
 
 
-# ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 async def health_check():
@@ -48,10 +45,7 @@ async def health_check():
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload_pdf(file: UploadFile = File(...)):
-    """
-    Upload a PDF. Extracts text, chunks it, embeds it via LangChain, and stores in ChromaDB.
-    Returns a session_id for all subsequent questions.
-    """
+    """Upload a PDF and create a session for question answering."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
@@ -59,7 +53,6 @@ async def upload_pdf(file: UploadFile = File(...)):
     if len(file_bytes) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-    # Step 1: Extract text
     try:
         text = extract_text_from_pdf(file_bytes)
     except Exception as e:
@@ -68,12 +61,10 @@ async def upload_pdf(file: UploadFile = File(...)):
     if not text.strip():
         raise HTTPException(status_code=400, detail="Could not extract any text. PDF may be image-based.")
 
-    # Step 2: Chunk text
     chunks = chunk_text(text, chunk_size=800, overlap=100)
     if not chunks:
         raise HTTPException(status_code=400, detail="PDF has no readable content.")
 
-    # Step 3: Embed + store via LangChain (embedder is called inside store_chunks)
     session_id = str(uuid.uuid4())
     try:
         store_chunks(session_id, chunks)
@@ -89,10 +80,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @app.post("/ask", response_model=QuestionResponse)
 async def ask_question(req: QuestionRequest):
-    """
-    Ask a question about the uploaded PDF.
-    LangChain handles retrieval + memory + generation internally.
-    """
+    """Ask a question about an uploaded PDF session."""
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
