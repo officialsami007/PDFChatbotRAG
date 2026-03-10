@@ -14,10 +14,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
 
 
 def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str]:
-    """
-    Split text into overlapping chunks using LangChain's RecursiveCharacterTextSplitter.
-    Splits on paragraph → sentence → word boundaries for cleaner chunks than word-count slicing.
-    """
+    """ Split text into overlapping chunks using LangChain's RecursiveCharacterTextSplitter."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=overlap,
