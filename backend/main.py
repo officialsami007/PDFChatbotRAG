@@ -9,10 +9,20 @@ from fastapi.responses import FileResponse
 from rag.parser import extract_text_from_pdf, chunk_text
 from rag.vectorstore import store_chunks, delete_session
 from rag.chain import get_answer, clear_memory
+from contextlib import asynccontextmanager
 
 load_dotenv()
 
-app = FastAPI(title="PDF RAG Chatbot", version="2.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-load embedding model at startup — prevents first-request timeout
+    print("Pre-loading embedding model...")
+    from rag.embedder import get_embeddings
+    get_embeddings()
+    print("Embedding model ready.")
+    yield
+
+app = FastAPI(title="PDF RAG Chatbot", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
