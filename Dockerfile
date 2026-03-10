@@ -12,7 +12,7 @@ COPY frontend/ .
 
 # Use ARG + ENV (most compatible way across all Docker versions)
 ARG VITE_API_URL=""
-ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_URL=""
 
 # Run build with verbose output so we can see any errors clearly
 RUN npm run build -- --logLevel info
