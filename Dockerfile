@@ -10,11 +10,9 @@ RUN npm install
 
 COPY frontend/ .
 
-# Use ARG + ENV (most compatible way across all Docker versions)
 ARG VITE_API_URL=""
 ENV VITE_API_URL=""
 
-# Run build with verbose output so we can see any errors clearly
 RUN npm run build -- --logLevel info
 
 # ╔══════════════════════════════════════════════════════════════╗
@@ -27,6 +25,11 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir aiofiles
+
+# ── Pre-download embedding model at build time ────────────────
+# This bakes the model into the image so startup is instant
+# instead of downloading it on the first request (which causes timeouts)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 COPY backend/ .
 
