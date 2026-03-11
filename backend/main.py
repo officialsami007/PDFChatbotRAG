@@ -4,12 +4,15 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import uuid
 import os
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY"] = "False"
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from rag.parser import extract_text_from_pdf, chunk_text
 from rag.vectorstore import store_chunks, delete_session
 from rag.chain import get_answer, clear_memory
 from contextlib import asynccontextmanager
+
 
 load_dotenv()
 

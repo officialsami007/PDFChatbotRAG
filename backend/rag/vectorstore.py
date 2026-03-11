@@ -1,4 +1,7 @@
 import os
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY"] = "False"
+
 from typing import List
 from langchain_chroma import Chroma
 from langchain.schema import Document
@@ -16,10 +19,6 @@ def _persist_dir() -> str:
 
 
 def store_chunks(session_id: str, chunks: List[str]) -> Chroma:
-    """
-    Embed and store text chunks in a per-session Chroma collection.
-    Returns the Chroma vectorstore instance for immediate use.
-    """
     documents = [Document(page_content=chunk) for chunk in chunks]
     vectorstore = Chroma.from_documents(
         documents=documents,
@@ -32,7 +31,6 @@ def store_chunks(session_id: str, chunks: List[str]) -> Chroma:
 
 
 def get_vectorstore(session_id: str) -> Chroma:
-    """Load an existing Chroma collection for a session."""
     return Chroma(
         collection_name=_collection_name(session_id),
         embedding_function=get_embeddings(),
@@ -42,7 +40,6 @@ def get_vectorstore(session_id: str) -> Chroma:
 
 
 def delete_session(session_id: str) -> None:
-    """Delete all vector data for a session."""
     try:
         vs = get_vectorstore(session_id)
         vs.delete_collection()
