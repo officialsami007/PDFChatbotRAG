@@ -22,13 +22,14 @@ def _build_chain(session_id: str) -> ConversationalRetrievalChain:
         api_key=os.getenv("GROQ_API_KEY"),
         model="llama-3.3-70b-versatile",
         temperature=0.2,
-        max_tokens=1024,
+        max_tokens=512,
+        timeout=25,
     )
 
     vectorstore = get_vectorstore(session_id)
     retriever = vectorstore.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 5},
+        search_kwargs={"k": 3},
     )
 
     memory = ConversationBufferMemory(
@@ -56,7 +57,7 @@ def get_answer(session_id: str, question: str) -> tuple[str, int]:
     if session_id not in _chains:
         _chains[session_id] = _build_chain(session_id)
 
-    chain = _chains[session_id]
+    chain = _build_chain(session_id) 
     result = chain.invoke({"question": question})
 
     answer = result["answer"]

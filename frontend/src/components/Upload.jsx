@@ -230,7 +230,11 @@ export default function Upload({ onUploadSuccess }) {
           <div style={styles.fileChip}>
             <span>📄</span>
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-            <span style={{ color: 'var(--text3)' }}>{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+            <span style={{ color: 'var(--text3)' }}>
+              {file.size < 1024 * 1024
+                ? (file.size / 1024).toFixed(0) + ' KB'
+                : (file.size / 1024 / 1024).toFixed(1) + ' MB'}
+            </span>
             {!loading && (
               <span
                 style={{ cursor: 'pointer', color: 'var(--text3)', fontSize: 16 }}
