@@ -6,6 +6,7 @@ import uuid
 import os
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 os.environ["CHROMA_TELEMETRY"] = "False"
+os.environ["POSTHOG_DISABLED"] = "1"
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from rag.parser import extract_text_from_pdf, chunk_text
